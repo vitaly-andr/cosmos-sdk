@@ -9,14 +9,9 @@ import (
 // a consensus address with no validator behind it reports (nil, nil) instead of
 // ErrNoValidatorFound.
 //
-// The two non-test callers of ValidatorByConsAddr both run inside BeginBlock and
-// both already handle a nil validator gracefully -- x/evidence
-// handleEquivocationEvidence ("Defensive: Simulation doesn't take unbonding
-// periods into account, and CometBFT might break this assumption at some point")
-// and x/slashing HandleValidatorSignature ("if validator != nil"). Neither guard
-// is reachable while the error is propagated: the `if err != nil { return err }`
-// check comes first, the error travels out of BeginBlocker into FinalizeBlock and
-// the chain halts with "validator does not exist".
+// Evidence handles the nil result during BeginBlock. Slashing also handles nil
+// at its later lookup, after skipping a missing validator at its earlier
+// IsValidatorJailed call. Propagating the error here still halts BeginBlocker.
 //
 // Upstream cosmos never reaches that state, because a validator is removed only
 // after the full unbonding period, long after it has left every commit. This

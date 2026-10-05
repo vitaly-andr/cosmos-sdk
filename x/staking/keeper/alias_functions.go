@@ -106,11 +106,8 @@ func (k Keeper) Validator(ctx context.Context, address sdk.ValAddress) (types.Va
 func (k Keeper) ValidatorByConsAddr(ctx context.Context, addr sdk.ConsAddress) (types.ValidatorI, error) {
 	// A missing validator is a normal outcome, not an error: CometBFT keeps a
 	// validator in LastCommit for ValidatorUpdateDelay blocks after the chain
-	// removed it, so slashing and evidence legitimately look up addresses that
-	// no longer resolve. Returning the error propagates out of BeginBlocker and
-	// halts the chain; callers are written for the nil case instead - see
-	// x/slashing/keeper/infractions.go, which checks `validator != nil` right
-	// after this call.
+	// removed it. Evidence handles a nil validator; slashing skips a missing
+	// validator before updating its signing history.
 	validator, err := k.GetValidatorByConsAddr(ctx, addr)
 	if err != nil {
 		if errors.Is(err, types.ErrNoValidatorFound) {
